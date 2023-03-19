@@ -20,6 +20,9 @@ class ParseResponseException(OSError):
 
 
 def fetch_stock_data(symbol):
+    """Use alpha vantage API to get stock daily price data
+    Doc: https://www.alphavantage.co/documentation/#dailyadj
+    """
     url = 'https://www.alphavantage.co/query'
     params = dict(
         function='TIME_SERIES_DAILY_ADJUSTED',
@@ -35,13 +38,51 @@ def fetch_stock_data(symbol):
 
 
 def parse_content(content, days_needed=14):
+    """
+    :param content:
+    {
+        "Meta Data": {
+            "1. Information": "Daily Time Series with Splits and Dividend Events",
+            "2. Symbol": "IBM",
+            "3. Last Refreshed": "2023-03-17",
+            "4. Output Size": "Compact",
+            "5. Time Zone": "US/Eastern"
+        },
+        "Time Series (Daily)": {
+            "2023-03-17": {
+                "1. open": "124.08",
+                "2. high": "124.52",
+                "3. low": "122.93",
+                "4. close": "123.69",
+                "5. adjusted close": "123.69",
+                "6. volume": "37400167",
+                "7. dividend amount": "0.0000",
+                "8. split coefficient": "1.0"
+            },
+            ...
+        }
+    }
+
+    :param days_needed: int > 0
+    :return:
+    [
+        {
+            "symbol": "IBM",
+            "date": "2023-02-14",
+            "open_price": "153.08",
+            "close_price": "154.52",
+            "volume": "62199013",
+        },
+        ...
+    ]
+    """
     date_str_mapping_data = content['Time Series (Daily)']
     symbol = content['Meta Data']['2. Symbol']
     now = datetime.now().date()
     date_ = now
     result_list = []
 
-    while date_ >= now - timedelta(days=days_needed):
+    while date_ > now - timedelta(days=days_needed):
         date_str = date_.strftime('%Y-%m-%d')
         data = date_str_mapping_data.get(date_str)
         date_ -= timedelta(days=1)
@@ -61,10 +102,18 @@ def parse_content(content, days_needed=14):
 
 
 def save_stock_data_into_db(result_list):
-    return FinancialDataDAO.batch_upsert(result_list)
+    """Split results into smaller chunks to avoid connection overload
+    """
+    chunk_size = 300
+    for idx in range(0, len(result_list), chunk_size):
+        partial_result = result_list[idx: idx + chunk_size]
+        FinancialDataDAO.batch_upsert(partial_result)
 
 
 def fetch_stock_data_and_save_to_db():
+    """Fetch data -> parse data -> save to db
+    :return: None
+    """
     symbols = ['IBM', 'AAPL']
     result_list = []
     for symbol in symbols:

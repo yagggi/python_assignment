@@ -8,6 +8,7 @@ DEFAULT_LIMIT_PER_PAGE = 5
 
 
 def _parse_url_params(url_params, schema):
+    """Validate and serialize url params using specific schema"""
     error = ''
     try:
         query = schema.load(url_params)
@@ -18,6 +19,17 @@ def _parse_url_params(url_params, schema):
 
 
 def _generate_pagination_info(total_cnt, current_page, limit_per_page=DEFAULT_LIMIT_PER_PAGE):
+    """
+    :param total_cnt: int
+    :param current_page: int
+    :param limit_per_page: int
+    :return: {
+        page: int,
+        limit: int,
+        pages: int,
+        count: int
+    }
+    """
     pagination = dict(
         page=current_page,
         limit=limit_per_page,
@@ -28,6 +40,7 @@ def _generate_pagination_info(total_cnt, current_page, limit_per_page=DEFAULT_LI
 
 
 def get_financial_data(url_params):
+    """Generate financial data response data (in dict representation) according to url params"""
     error, query = _parse_url_params(url_params, FinancialDataQueryDeserializer())
     if error:
         data = []
@@ -49,6 +62,7 @@ def get_financial_data(url_params):
 
 
 def get_financial_statistics(url_params):
+    """Generate statistics response data (in dict representation) according to url params"""
     error, query = _parse_url_params(url_params, FinancialStatisticsQueryDeserializer())
 
     if error:

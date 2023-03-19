@@ -29,7 +29,7 @@ class DateFormatValidator(Validator):
 
 
 class DateRangeValidationMixin:
-
+    """Validate start_date is less or equal to end_date"""
     @post_load
     def validate_date_range(self, data, **kwargs):
         start_date = data.get('start_date')

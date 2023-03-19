@@ -22,7 +22,7 @@ services:
     container_name: financial-app
     depends_on:
       financial-db:
-        condition: service_healthy
+        condition: service_healthy   # to avoid connection error, ref: https://github.com/compose-spec/compose-spec/blob/master/spec.md#depends_on
     ports:
       - "5000:5000"
     command: sh -c "python get_raw_data.py && flask --app financial.app run --host=0.0.0.0"
