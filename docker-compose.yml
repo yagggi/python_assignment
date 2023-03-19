@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  financial-db:
+    restart: always
+    image: mysql:8.0
+    container_name: financial-db
+    ports:
+      - 127.0.0.1:3306:3306
+    env_file: .env
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./schema.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: mysqladmin ping -h localhost -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
+      interval: 1s
+      timeout: 5s
+      retries: 10
+
+  financial-app:
+    build: .
+    restart: always
+    container_name: financial-app
+    depends_on:
+      financial-db:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+    command: sh -c "python get_raw_data.py && flask --app financial.app run --host=0.0.0.0"
+    env_file: .env
+
+volumes:
+  db-data:

@@ -1,6 +1,9 @@
 
+CREATE DATABASE IF NOT EXISTS financial;
 
-CREATE TABLE `financial_data` (
+USE financial;
+
+CREATE TABLE IF NOT EXISTS `financial_data` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `symbol` varchar(128) NOT NULL COMMENT 'Stock symbol',
   `date` timestamp NOT NULL COMMENT 'Date of price data',
